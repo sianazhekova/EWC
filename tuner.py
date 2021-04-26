@@ -3,7 +3,8 @@ import numpy as np
 from copy import deepcopy
 from classifiers import Classifier
 from numpy.random import RandomState
-from queue import PriorityQueue
+import Queue
+from Queue import PriorityQueue
 from tensorflow.contrib.learn.python.learn.datasets.mnist import read_data_sets
 
 
