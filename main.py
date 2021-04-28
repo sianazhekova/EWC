@@ -16,7 +16,7 @@ def parse_args():
 
 def main():
     args = parse_args()
-    with tf.Session() as sess:
+    with tf.compat.v1.Session() as sess:
         tuner = HyperparameterTuner(sess=sess, hidden_layers=args.hidden_layers, hidden_units=args.hidden_units,
                                     num_perms=args.num_perms, trials=args.trials, epochs=args.epochs)
         tuner.search()

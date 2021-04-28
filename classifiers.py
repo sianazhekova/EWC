@@ -62,28 +62,28 @@ class Classifier(Network):
         sess.run(self.fisher_accumulate_op, feed_dict={self.x_fisher: batch_xs, self.y_fisher: batch_ys})
 
     def prepare_for_training(self, sess, model_name, model_init_name, fisher_multiplier, learning_rate):
-        self.writer = tf.summary.FileWriter(self.summaries_path + model_name, sess.graph)
-        self.merged = tf.summary.merge_all()
+        self.writer = tf.compat.v1.summary.FileWriter(self.summaries_path + model_name, sess.graph)
+        self.merged = tf.compat.v1.summary.merge_all()
         self.train_step = self.create_train_step(fisher_multiplier if model_init_name else 0.0, learning_rate)
-        init = tf.global_variables_initializer()
+        init = tf.compat.v1.global_variables_initializer()
         sess.run(init)
         if model_init_name:
             self.restore_model(sess, model_init_name)
 
     def create_loss_and_accuracy(self):
-        with tf.name_scope("loss"):
-            average_nll = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=self.scores, labels=self.y))  # optimized
-            tf.summary.scalar("loss", average_nll)
+        with tf.compat.v1.name_scope("loss"):
+            average_nll = tf.reduce_mean(input_tensor=tf.nn.softmax_cross_entropy_with_logits(logits=self.scores, labels=tf.stop_gradient(self.y)))  # optimized
+            tf.compat.v1.summary.scalar("loss", average_nll)
             self.loss = average_nll
-        with tf.name_scope('accuracy'):
-            accuracy = tf.reduce_mean(tf.cast(tf.equal(tf.argmax(self.scores, 1), tf.argmax(self.y, 1)), tf.float32))
-            tf.summary.scalar('accuracy', accuracy)
+        with tf.compat.v1.name_scope('accuracy'):
+            accuracy = tf.reduce_mean(input_tensor=tf.cast(tf.equal(tf.argmax(input=self.scores, axis=1), tf.argmax(input=self.y, axis=1)), tf.float32))
+            tf.compat.v1.summary.scalar('accuracy', accuracy)
             self.accuracy = accuracy
 
     def create_train_step(self, fisher_multiplier, learning_rate):
-        with tf.name_scope("optimizer"):
-            self.optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
-            penalty = tf.add_n([tf.reduce_sum(tf.square(w1-w2)*f) for w1, w2, f
+        with tf.compat.v1.name_scope("optimizer"):
+            self.optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate=learning_rate)
+            penalty = tf.add_n([tf.reduce_sum(input_tensor=tf.square(w1-w2)*f) for w1, w2, f
                                 in zip(self.theta, self.theta_lagged, self.fisher_diagonal)])
             return self.optimizer.minimize(self.loss + (fisher_multiplier / 2) * penalty, var_list=self.theta)
 
